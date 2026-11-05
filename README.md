@@ -75,6 +75,39 @@ congress members get P000197 --json
 
 Use `--json` to print raw JSON. Otherwise a readable table or panel is shown.
 
+## Congressional Research Service reports
+
+```bash
+congress crs list --limit 20                     # most recently updated first
+congress crs list --limit 1000                   # any size; fetched 250 per request
+congress crs list --from 2026-10-01 --to 2026-10-31
+congress crs get RS21534                         # authors, topics, summary, PDF/HTML links
+congress crs search "oman"                       # title/ID search across all reports
+congress crs search "tariff canada" --from 2026-01-01 --type Reports
+congress crs search "tariff" --from 2026-10-01 --deep   # also searches summaries, topics, authors
+```
+
+The Congress.gov API has no keyword search for CRS reports and returns at most
+250 per request, so `search` pages through the listing and matches locally:
+
+- Every word must match, case-insensitive, at the start of a word ("oman" finds
+  "Oman" and "Omani" but not "Romania").
+- A title search of all ~14,000 reports takes about 60 requests (roughly 10 seconds).
+- `--deep` fetches each report's details to search its summary, topics and
+  authors. That's one request per report, so narrow it with `--from`/`--to`.
+- `--from`/`--to` filter on the date a report was last updated, not first published.
+- `--type` is `Reports`, `Resources` (In Focus briefs) or `Posts` (Insights, Legal Sidebars).
+
+```python
+from congress_api.crs_reports import CrsReports
+
+crs = CrsReports(client)
+crs.get("RS21534")
+for r in crs.iter(max_items=1000, from_date="2026-10-01"):
+    print(r["id"], r["title"])
+hits = list(crs.search("tariff", from_date="2026-10-01", deep=True))
+```
+
 ## Running Tests
 
 ```bash
@@ -92,6 +125,7 @@ Tests mock all HTTP calls (via respx) and do not require a real API key.
 - Custom exceptions (`AuthError`, `NotFoundError`, `RateLimitError`, `ServerError`, `APIError`)
 - Type hints and docstrings
 - Typer CLI with rich tables/panels
+- Congressional Research Service reports: list, get and local keyword search
 - Full test suite
 
 ## License

@@ -19,3 +19,10 @@ def test_bills_help():
     assert result.exit_code == 0
     assert "list" in result.stdout
     assert "get" in result.stdout
+
+
+def test_crs_help():
+    result = runner.invoke(app, ["crs", "--help"])
+    assert result.exit_code == 0
+    for cmd in ("list", "get", "search"):
+        assert cmd in result.stdout
